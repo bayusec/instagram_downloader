@@ -150,13 +150,11 @@ class Instagram:
 
     def quickstart(self, username, password):
         if not self.checkcookies():
-            print("con login")
             msg_login = self.login(username, password)
             if not msg_login:
                 raise SystemExit("Error in User or Password.")
         # load session from cookie file
         else:
-            print("con cookies")
             with open(self.file_cookies, 'rb') as f:
                 self.sesion.cookies.update(pickle.load(f).cookies)
         return self.getstories()
