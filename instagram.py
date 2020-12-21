@@ -9,7 +9,10 @@
 # url             :https://github.com/bayusec/instagram_downloader
 # python_version  :2.7
 # ==============================================================================
+from datetime import datetime
 import json
+import sys
+
 import requests
 import time
 from bs4 import BeautifulSoup
@@ -56,14 +59,19 @@ class Instagram:
     def login(self, user, password):
         # Getting token
         freq = self.sesion.get(self.url)
-        csrftoken = freq.cookies["csrftoken"]
+        csrftoken = self.sesion.cookies.get_dict()["csrftoken"]
         # using token in headers
         self.headers["x-csrftoken"] = csrftoken
+
+        igtime = int(datetime.now().timestamp())
+
         data = {"username": user,
-                "password": password}
+                "enc_password": f'#PWD_INSTAGRAM_BROWSER:0:{time}:{password}'}
         time.sleep(1)
+
         # Login in instagram
         req = self.sesion.post(self.url_login, data=data, headers=self.headers)
+
         authjson = req.json()
         if not authjson["authenticated"]:
             return False
@@ -104,17 +112,21 @@ class Instagram:
         self.getpreloadlink()
         self.gethashfromjs()
         self.getuserslist()
-        output = []
+        output=[]
         last = '{"reel_ids":["' + '","'.join(
             self.userslist) + '"],"highlight_reel_ids":[],"precomposed_overlay":false,"story_viewer_fetch_count":50}'
         url_stories = self.url + "/graphql/query/?query_hash=" + self.hash_query + "&variables=" + last
 
         req_stories = self.sesion.get(url_stories)
         json_stories = req_stories.json()
+
+
+
         for user_storie in json_stories["data"]["reels_media"]:
-            part_storie = []
             part_user = {}
+            part_storie = []
             part_user['username'] = str(user_storie["owner"]["username"])
+
             # showing stories
             for st in user_storie["items"]:
                 part_link = {}
@@ -127,8 +139,9 @@ class Instagram:
                 part_storie.append(part_link)
             part_user['stories'] = part_storie
             output.append(part_user)
-        self.savecookies()
+
         return json.dumps(output)
+        self.savecookies()
 
     def savecookies(self):
         open(self.file_cookies, 'w').close()
@@ -137,15 +150,18 @@ class Instagram:
 
     def quickstart(self, username, password):
         if not self.checkcookies():
+            print("con login")
             msg_login = self.login(username, password)
             if not msg_login:
                 raise SystemExit("Error in User or Password.")
         # load session from cookie file
         else:
+            print("con cookies")
             with open(self.file_cookies, 'rb') as f:
                 self.sesion.cookies.update(pickle.load(f).cookies)
         return self.getstories()
 
 
-# ig = Instagram()
-# print ig.quickstart("", "")
+# user = sys.argv[1]
+ig = Instagram()
+print(ig.quickstart("user", "password"))
