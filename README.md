@@ -1,5 +1,4 @@
 # instagram_downloader
-python script for see anonymously stories from instagram.
 
 Este clase de python permite obtener las historias de los conctactos de instagram y verlas directamente sin dejar rastros de su visualización (la persona de la historia no sabrá que lo viste).
 
